@@ -72,7 +72,6 @@ public class PageAnalyticsService {
 
     List<UrlData> convertUrlsToLinkDataSorted(List<String> javaScriptUrls) {
         return javaScriptUrls.stream()
-                .filter(JavaScriptUtils::isPublicLibrary)
                 .map(JavaScriptUtils::getLibraryNameWithoutVersion)
                 .collect(groupingBy(Function.identity(), counting()))
                 .entrySet()
