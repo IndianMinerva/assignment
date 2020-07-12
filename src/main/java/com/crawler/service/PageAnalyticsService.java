@@ -3,13 +3,15 @@ package com.crawler.service;
 import com.crawler.config.AppConfig;
 import com.crawler.pojo.UrlData;
 import com.crawler.utils.JavaScriptUtils;
+import com.crawler.utils.Partition;
 import com.crawler.worker.PageParserWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -19,9 +21,7 @@ import java.util.stream.IntStream;
 
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.*;
 
 @Service
 public class PageAnalyticsService {
@@ -38,7 +38,8 @@ public class PageAnalyticsService {
 
     public List<UrlData> getJavaScriptLinksSorted(final String searchString) {
         final List<String> javaScriptUrls = new LinkedList<>();
-        final Queue<String> searchResults = searchService.getLinksFromSearch(searchString);
+        final List<String> results = searchService.getLinksFromSearch(searchString);
+        final List<List<String>> searchResults = Partition.ofSize(results, getNumThreads());
 
         for (Future<List<String>> future : startWorkersAndGetFutures(searchResults)) {
             try {
@@ -54,11 +55,11 @@ public class PageAnalyticsService {
                 .collect(toList());
     }
 
-    private List<Future<List<String>>> startWorkersAndGetFutures(Queue<String> searchResults) {
-        final int numThreads = appConfig.getThreadCount() == 0 ? Runtime.getRuntime().availableProcessors() : appConfig.getThreadCount();
+    private List<Future<List<String>>> startWorkersAndGetFutures(List<List<String>> searchResults) {
+        final int numThreads = getNumThreads();
         final ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         final List<PageParserWorker> workers = IntStream.range(0, numThreads)
-                .mapToObj(i -> new PageParserWorker(searchResults))
+                .mapToObj(i -> new PageParserWorker(searchResults.get(i)))
                 .collect(Collectors.toList());
         try {
             return executorService.invokeAll(workers);
@@ -68,6 +69,10 @@ public class PageAnalyticsService {
         } finally {
             executorService.shutdown();
         }
+    }
+
+    private int getNumThreads() {
+        return appConfig.getThreadCount() == 0 ? Runtime.getRuntime().availableProcessors() : appConfig.getThreadCount();
     }
 
     List<UrlData> convertUrlsToLinkDataSorted(List<String> javaScriptUrls) {

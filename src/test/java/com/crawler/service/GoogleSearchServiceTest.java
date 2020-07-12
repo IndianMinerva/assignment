@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.Queue;
+import java.util.List;
 
 import static org.junit.Assert.assertFalse;
 
@@ -18,7 +18,7 @@ public class GoogleSearchServiceTest {
 
     @Test
     public void testGetLinksFromSearch() {
-        Queue<String> links = searchService.getLinksFromSearch("java");
+        List<String> links = searchService.getLinksFromSearch("java");
         assertFalse(links.isEmpty());
     }
 }

@@ -1,7 +1,7 @@
 package com.crawler.service;
 
-import java.util.Queue;
+import java.util.List;
 
 public interface SearchService {
-    Queue<String> getLinksFromSearch(String queryString);
+    List<String> getLinksFromSearch(String queryString);
 }

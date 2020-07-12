@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.Queue;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -25,7 +25,7 @@ public class GoogleSearchService implements SearchService {
         this.googleConfig = googleConfig;
     }
 
-    public Queue<String> getLinksFromSearch(String queryString) {
+    public List<String> getLinksFromSearch(String queryString) {
         final String searchUrl = String.format(googleConfig.getUrlPattern(), queryString, googleConfig.getResultCount());
         LOGGER.info("The link being searched for is {}", searchUrl);
         final Document doc;
